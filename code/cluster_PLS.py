@@ -8,11 +8,9 @@ outputs: num cluster labels with p value
 """
 
 
-
 import numpy as np
 from scipy.stats import norm
 from sklearn.cluster import KMeans
-
 class PLS_cluster:
 
     def __init__(self, data):
@@ -29,7 +27,7 @@ class PLS_cluster:
         #print(rank)
         print(rank >= threshold)
 
-        self.cluster_n = (rank >= threshold).sum()
+        self.cluster_n = (rank >= threshold).sum()+1
         self.X = self.data.dot(v.T[:,:self.cluster_n])
         
 
@@ -55,8 +53,10 @@ class PLS_cluster:
         R = np.array(cluster_mean).dot(np.array(cluster_mean).T)
      
         d,u =np.linalg.eigh(R)
-        eg= (d.min())
-        #print(eg)
+        d.sort()
+        d=d[::-1]
+        eg= -d[self.cluster_n-1]+ d[self.cluster_n-2]
+        print(eg)
         egs_perm = []
         for i in range(perm_n):
             ind = np.arange(self.data.shape[0])
@@ -73,8 +73,12 @@ class PLS_cluster:
             R = np.array(cluster_mean).dot(np.array(cluster_mean).T)
 
             d,u =np.linalg.eigh(R)
-            egs_perm.append(d.min())
+            d.sort()
+            d=d[::-1]
+        
+            egs_perm.append(-d[self.cluster_n-1]+d[self.cluster_n-2])
         z = (eg - np.array(egs_perm).mean())/np.array(egs_perm).std()
+        print(z)
         self.egs_perm = np.array(egs_perm)
         self.p_value = norm.sf(z)
-            
+        self.egs = np.array(egs_perm)
